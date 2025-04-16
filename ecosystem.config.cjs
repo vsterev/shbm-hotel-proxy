@@ -17,7 +17,7 @@ module.exports = {
       host: "192.168.10.10",
       ref: "origin/master",
       repo: "git@github.com:vsterev/shbm-hotel-proxy.git",
-      path: "/home/vsterev/git/your-repo/home/vsterev/git/shbm/shbm-hotel-proxy",
+      path: "/home/vsterev/git/shbm/pm2/shbm-hotel-proxy",
       "post-deploy":
         "npm install && npm run build && pm2 reload ecosystem.config.cjs --env production",
     },
