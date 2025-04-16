@@ -16,7 +16,7 @@ module.exports = {
       repo: "git@github.com:vsterev/shbm-hotel-proxy.git",
       path: "/home/vsterev/git/shbm/pm2/shbm-hotel-proxy",
       "post-deploy":
-        "yarn && yarn build && pm2 startOrReload ecosystem.config.cjs --only shbm_hotel_proxy",
+        "echo 'YARN PATH:' $(which yarn) && yarn -v && yarn && yarn build && pm2 startOrReload ecosystem.config.cjs --only shbm_hotel_proxy",
     },
   },
 };
