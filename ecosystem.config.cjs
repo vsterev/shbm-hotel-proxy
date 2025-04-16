@@ -20,10 +20,7 @@ module.exports = {
       repo: "git@github.com:vsterev/shbm-hotel-proxy.git",
       path: "/home/vsterev/git/shbm/pm2/shbm-hotel-proxy",
       "post-deploy":
-        "nvm use 22 \
-        && npm install \
-        && npm run build \
-        && pm2 startOrReload ecosystem.config.cjs --only shbm_hotel_proxy",
+        "yarn && yarn build && pm2 startOrReload ecosystem.config.cjs --only shbm_hotel_proxy",
     },
   },
 };
