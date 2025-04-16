@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "author": "Vassil Shterev <vsterev@gmail.com>",
   "license": "MIT",
-  "main": "dist/app.js",
+  "main": "src/dist/app.js",
   "scripts": {
     "start": "tsoa routes && tsc && node dist/app.js",
     "dev": "concurrently \"tsoa routes -w\" \"tsc -w\" \"nodemon dist/app.js\"",
