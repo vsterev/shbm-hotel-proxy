@@ -7,9 +7,9 @@ module.exports = {
       // autorestart: true,
       wait_ready: true,
       // watch: false,
-      // env: {
-      //   NODE_ENV: "production",
-      // },
+      env: {
+        NODE_ENV: "production",
+      },
     },
   ],
   deploy: {
@@ -19,7 +19,8 @@ module.exports = {
       ref: "origin/master",
       repo: "git@github.com:vsterev/shbm-hotel-proxy.git",
       path: "/home/vsterev/git/shbm/pm2/shbm-hotel-proxy",
-      "post-deploy": "yarn && yarn build",
+      "post-deploy":
+        "yarn && yarn build && pm2 startOrReload ecosystem.config.cjs --env production",
     },
   },
 };
