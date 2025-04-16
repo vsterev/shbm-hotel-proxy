@@ -5,7 +5,7 @@ module.exports = {
       script: "./dist/src/app.js",
       instances: 1,
       wait_ready: true,
-      exsc_mode: "cluster",
+      exec_mode: "cluster",
     },
   ],
   deploy: {
