@@ -4,9 +4,9 @@ module.exports = {
       name: "shbm_hotel_proxy",
       script: "./dist/src/app.js", // или index.js, зависи от структурата ти
       instances: 1,
-      // autorestart: true,
-      wait_ready: true,
-      // watch: false,
+      autorestart: true,
+      // wait_ready: true,
+      watch: false,
       env: {
         NODE_ENV: "production",
       },
@@ -20,7 +20,7 @@ module.exports = {
       repo: "git@github.com:vsterev/shbm-hotel-proxy.git",
       path: "/home/vsterev/git/shbm/pm2/shbm-hotel-proxy",
       "post-deploy":
-        "yarn && yarn build && pm2 startOrReload ecosystem.config.cjs --env production",
+        "yarn && yarn build && pm2 reload ecosystem.config.cjs --env production",
     },
   },
 };
