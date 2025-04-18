@@ -34,33 +34,53 @@ This service is part of the **Solvex Hotel Booking Manager** system. It acts as 
 
 ## 📦 Local Development
 
-1. **Clone the repo**
+1. **Install Redis (if not already installed)**
+
+```bash
+sudo apt update
+sudo apt install redis-server
+```
+
+Enable and start Redis:
+
+```bash
+sudo systemctl enable redis
+sudo systemctl start redis
+```
+
+To check if Redis is running:
+
+```bash
+redis-cli ping
+```
+
+2. **Clone the repo**
 
    ```bash
    git clone git@github.com:vsterev/shbm-hotel-proxy.git
    cd shbm-hotel-proxy
    ```
 
-2. **Install dependencies**
+3. **Install dependencies**
 
    ```bash
    yarn
    ```
 
-3. **Setup environment**
+4. **Setup environment**
    Copy example.env to .env and configure your values.
 
    ```bash
    cp .example.env .env
    ```
 
-4. **Run in dev mode**
+5. **Run in dev mode**
 
 ```bash
    yarn dev
 ```
 
-5. **Build for production**
+6. **Build for production**
 
 ```bash
 yarn build
