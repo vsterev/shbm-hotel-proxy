@@ -216,10 +216,10 @@ export default class ParsingAPI {
       Status: mapAction[booking.action as keyof typeof mapAction],
       Comments: hts.note ? hts.note : "",
       Names: formatTourists(hts.tourists),
-      Flight_Arr: "",
-      Flight_Arr_Time: "",
-      Flight_Dep: "",
-      Flight_Dep_Time: "",
+      Flight_Arr: booking.flightInfo?.flightArr.replace("(", "").replace(")", "").split(" - ")[0] || "",
+      Flight_Arr_Time: booking.flightInfo?.flightArr.replace("(", "").replace(")", "").split(" - ")[1] || "",
+      Flight_Dep: booking.flightInfo?.flightDep.replace("(", "").replace(")", "").split(" - ")[0] || "",
+      Flight_Dep_Time: booking.flightInfo?.flightDep.replace("(", "").replace(")", "").split(" - ")[1] || "",
     };
   }
   static hotelSerializationResponse = {
