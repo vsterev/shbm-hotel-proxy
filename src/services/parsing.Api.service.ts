@@ -1,7 +1,7 @@
 import envVaraibles from "../config/envVariables";
 import redis from "../config/redis.config";
 import { IParserBooking, IParserBookingResponse, IParserRoomResponse, IParsingHotelResponse } from "../interfaces/parsing.interface";
-import { HotelResponse, IBooking, IHotelMap, IBookingHotelService, ITourist } from "../interfaces/solvex.interface";
+import { HotelResponse, IBooking, IBookingHotelService, ITourist } from "../interfaces/solvex.interface";
 
 export default class ParsingAPI {
   static async connect(): Promise<string | undefined> {
@@ -120,6 +120,7 @@ export default class ParsingAPI {
   }
 
   static async createReservation(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     booking: IParserBooking,
   ): Promise<IParserBookingResponse | undefined> {
     try {
@@ -127,7 +128,8 @@ export default class ParsingAPI {
       if (!token) {
         throw new Error("Error retrieving token from Parsing");
       }
-      // console.log(JSON.stringify(booking, undefined, 2));
+      // The following lines are commented out to simulate the response for testing purposes.
+      // Uncomment them to enable actual API calls.
       // const promiseResult = await fetch(`${envVaraibles.PARSER_URL}/NewResv`, {
       //   method: "POST",
       //   body: JSON.stringify(booking),
@@ -137,6 +139,8 @@ export default class ParsingAPI {
       //   throw new Error("Error creating reservation in Parsing");
       // }
       // return await promiseResult.json();
+
+      // Simulated response for testing
       const parserResponse = {
         "Adults": 2,
         "Age1": null,
@@ -147,8 +151,6 @@ export default class ParsingAPI {
         "Age6": null,
         "Age7": null,
         "Board": "ALL-",
-        // "CheckIn": "01.09.2022",
-        // "CheckOut": "10.09.2022",
         "CheckIn": "07.06.2025",
         "CheckOut": "14.06.2025",
         "Children": 0,
@@ -166,12 +168,12 @@ export default class ParsingAPI {
         "ResponseText": "NEW:|24.06.22 16:59||5,5,5,5,5,5,5,5,5|5,5,5,5,5,5,5,5,5|cf=1|rq=0",
         "ResvID": 0,
         "RoomType": "DBLDX",
-        // "Vocher": "2114698_2804931",
         "Voucher": "2271456-3598609",
         "isCancelled": "0"
       };
       return parserResponse as unknown as IParserBookingResponse;
     } catch (error) {
+      console.error(error);
       console.error(error);
     }
   }
@@ -245,78 +247,65 @@ export default class ParsingAPI {
   ): Promise<
     {
       errors: { booking: string, hotel: string }[];
-      confirmedBookings: IBooking[],
-      deniedBookings: IBooking[]
+      processedBookings: IBooking[],
     }
   > {
 
     const errors = [] as { booking: string, hotel: string }[];
 
-    const sendedBookings = async () => {
+    const processedBookings = await Promise.all(
+      bookings.map(async (booking) => {
+        await Promise.all(
+          booking.hotelServices.map(async (hts) => {
+            if (!hts.integrationSetings?.['serverName' as keyof IBookingHotelService]) {
+              errors.push({
+                booking: booking.bookingName,
+                hotel: hts.hotel,
+              });
+              return;
+            }
 
-      const confirmedBookings = [] as IBooking[];
-      const deniedBookings = [] as IBooking[];
+            const serializeParserBookingRequest = ParsingAPI.bookingSerialization(
+              booking,
+              hts
+            );
 
-      await Promise.all(
-        bookings.map(async (booking) => {
-          await Promise.all(
-            booking.hotelServices.map(async (hts) => {
-              if (!hts.integrationSetings?.['serverName' as keyof IBookingHotelService]) {
-                errors.push({
-                  booking: booking.bookingName,
-                  hotel: hts.hotel,
-                });
-                return;
-              }
+            const parsingBookingResponse = await this.createReservation(
+              serializeParserBookingRequest);
 
-              const serializeParserBookingRequest = ParsingAPI.bookingSerialization(
-                booking,
-                hts
-              );
+            const parserBbookingPrice = `${parsingBookingResponse?.PriceAmount} ${parsingBookingResponse?.PriceCurrency}`;
 
-              const parsingBookingResponse = await this.createReservation(
-                serializeParserBookingRequest);
+            const parserMessage = parsingBookingResponse?.ResponseText;
 
-              const parserBbookingPrice = `${parsingBookingResponse?.PriceAmount} ${parsingBookingResponse?.PriceCurrency}`;
+            const msgConfirmation = `parser -> price: ${parserBbookingPrice} | txt: ${parserMessage}`;
 
-              const parserMessage = parsingBookingResponse?.ResponseText;
+            hts.log = {
+              send: serializeParserBookingRequest,
+              response: parsingBookingResponse || {} as IParserBookingResponse,
+              sendDate: new Date(),
+            };
 
-              const msgConfirmation = `parser -> price: ${parserBbookingPrice} | txt: ${parserMessage}`;
-
-              booking.log = {
-                send: serializeParserBookingRequest,
-                response: parsingBookingResponse || {} as IParserBookingResponse,
-                sendDate: new Date(),
-              };
-
-              if (
-                !!parsingBookingResponse?.ConfirmationNo &&
-                parsingBookingResponse?.ConfirmationNo !== "" &&
-                parsingBookingResponse?.ConfirmationNo !== "0" &&
-                booking.action !== "Cancel"
-              ) {
-                //check waiit status
-                hts.confirmationNumber = parsingBookingResponse?.ConfirmationNo;
-                hts.msgConfirmation = msgConfirmation;
-                hts.status = "Confirmed";
-
-                confirmedBookings.push(booking);
-              } else {
-                hts.status = "Cancel";
-
-                deniedBookings.push(booking);
-              }
-              return hts;
-            })
-          )
-          return booking;
-        })
-      )
-      return { confirmedBookings, deniedBookings };
-    }
-
-    const { confirmedBookings, deniedBookings } = await sendedBookings();
-
-    return { errors, confirmedBookings, deniedBookings }
+            if (
+              !!parsingBookingResponse?.ConfirmationNo &&
+              parsingBookingResponse?.ConfirmationNo !== "" &&
+              parsingBookingResponse?.ConfirmationNo !== "0" &&
+              booking.action !== "Cancel"
+            ) {
+              //how to check WAIT status
+              hts.confirmationNumber = parsingBookingResponse?.ConfirmationNo;
+              hts.msgConfirmation = msgConfirmation;
+              hts.status = "Confirmed";
+              hts.log.integrationStatus = "confirmed";
+            } else {
+              hts.status = "Cancel";
+              hts.log.integrationStatus = "denied";
+            }
+            return hts;
+          })
+        )
+        return booking
+      })
+    )
+    return { errors, processedBookings }
   }
 }

@@ -55,7 +55,7 @@ export class MainController extends Controller {
         @Query() integrationName: string,
         @Body() bookings: IBooking[],
         @Res() notFound: TsoaResponse<404, { error: string }>,
-    ): Promise<{ errors: { booking: string, hotel: string }[], confirmedBookings: IBooking[], deniedBookings: IBooking[] }> {
+    ): Promise<{ errors: { booking: string, hotel: string }[], processedBookings: IBooking[] }> {
         try {
             if (!integrations.some((integration) => integration.name === integrationName)) {
                 notFound(404, { error: `Integration ${integrationName} not found` });
@@ -63,10 +63,10 @@ export class MainController extends Controller {
 
             switch (integrationName) {
                 case "parsing":
-                    const { errors, confirmedBookings, deniedBookings } = await ParsingAPI.sendBookings(bookings);
-                    return { errors, confirmedBookings, deniedBookings }
+                    const { errors, processedBookings } = await ParsingAPI.sendBookings(bookings);
+                    return { errors, processedBookings }
                 default:
-                    return { errors: [], confirmedBookings: [], deniedBookings: [] }
+                    return { errors: [], processedBookings: [] }
             }
         } catch (error) {
             console.error(error);

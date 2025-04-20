@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Path, Post, Query, Res, Route, Security, Tags, TsoaResponse } from "tsoa";
+import { Body, Controller, Post, Res, Route, Security, Tags, TsoaResponse } from "tsoa";
 import HbsAPI from "../services/hbs.Api.service";
 
 @Tags("partners")
