@@ -174,6 +174,7 @@ export default class ParsingAPI {
       return parserResponse as unknown as IParserBookingResponse;
     } catch (error) {
       console.error(error);
+    }
   }
 
   static bookingSerialization(
