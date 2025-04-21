@@ -21,7 +21,7 @@
         "tab.inactiveBackground": "#383a3b"
     },
     "peacock.color": "#1857a4",
-    "editor.formatOnSave": true,
+    "editor.formatOnSave": false,
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "explicit"
     },

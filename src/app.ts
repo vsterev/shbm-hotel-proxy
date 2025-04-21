@@ -14,34 +14,18 @@ app.use(bodyParser.json());
 app.use(morgan('dev'));
 
 RegisterRoutes(app);
-app.use(
-    ['/openapi', '/docs', '/swagger'],
-    swaggerUI.serve,
-    swaggerUI.setup(swaggerJson)
-);
+app.use(['/openapi', '/docs', '/swagger'], swaggerUI.serve, swaggerUI.setup(swaggerJson));
 const port = config.APP_PORT;
-app.listen(port, () =>
-    console.log(`Example app listening at http://localhost:${port}`)
-);
+app.listen(port, () => console.log(`Example app listening at http://localhost:${port}`));
 
-app.use(
-    (
-        err: unknown,
-        req: express.Request,
-        res: express.Response,
-        next: NextFunction
-    ): void => {
-        if (err instanceof ValidateError) {
-            console.error(
-                'Validation Error:',
-                JSON.stringify(err.fields, null, 2)
-            );
-            res.status(422).json({
-                message: 'Validation Failed',
-                details: err.fields,
-            });
-        } else {
-            next(err);
-        }
-    }
-);
+app.use((err: unknown, req: express.Request, res: express.Response, next: NextFunction): void => {
+	if (err instanceof ValidateError) {
+		console.error('Validation Error:', JSON.stringify(err.fields, null, 2));
+		res.status(422).json({
+			message: 'Validation Failed',
+			details: err.fields,
+		});
+	} else {
+		next(err);
+	}
+});
