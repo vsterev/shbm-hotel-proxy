@@ -1,0 +1,33 @@
+name: "Run test, linter and type check"
+on:
+  workflow_dispatch:
+  pull_request:
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  setup:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: yarn
+      - name: Install back-end deps
+        run: yarn --cwd backend
+      - name: Install front-end deps
+        run: yarn --cwd frontend
+      - name: Build
+        run: yarn build
+
+  type-check:
+    runs-on: self-hosted
+    needs: setup
+    steps:
+      - run: yarn typescript-check
+
+  lint-check:
+    runs-on: self-hosted
+    needs: setup
+    steps:
+      - run: yarn lint

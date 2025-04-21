@@ -20,5 +20,13 @@
         "tab.activeBackground": "#526380",
         "tab.inactiveBackground": "#383a3b"
     },
-    "peacock.color": "#1857a4"
+    "peacock.color": "#1857a4",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "eslint.validate": [
+        "typescript"
+    ],
+    "typescript.validate.enable": true
 }

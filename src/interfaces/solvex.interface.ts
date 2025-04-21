@@ -1,4 +1,4 @@
-import { IParserBooking, IParserBookingResponse } from "./parsing.interface";
+import { IParserBooking, IParserBookingResponse } from './parsing.interface';
 
 export interface IMessage {
     id: string;
@@ -52,7 +52,7 @@ export interface IBookingHotelService {
         response: IParserBookingResponse;
         manual?: { [key: string]: { booking: string; message: string } };
         sendDate?: Date;
-        integrationStatus?: "wait" | "confirmed" | "denied";
+        integrationStatus?: 'wait' | 'confirmed' | 'denied';
     };
 }
 
@@ -112,6 +112,5 @@ export interface HotelResponse {
         hotelServer: string;
         hotelServerId: number;
         serverName: string;
-    }
+    };
 }
-
