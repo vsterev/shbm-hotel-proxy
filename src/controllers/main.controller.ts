@@ -71,6 +71,7 @@ export class MainController extends Controller {
 
 			switch (integrationName) {
 				case 'parsing':
+					// eslint-disable-next-line
 					const { errors, processedBookings } = await ParsingAPI.sendBookings(bookings);
 					return { errors, processedBookings };
 				default:
