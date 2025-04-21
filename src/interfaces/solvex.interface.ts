@@ -41,10 +41,18 @@ export interface IBookingHotelService {
     priceRemark?: string;
     roomIntegrationCode?: string;
     boardIntegrationCode?: string;
-    integrationSetings?: {
+    integrationSettings?: {
         apiName?: string;
         hotelCode?: number;
-        [key: string]: any;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        [key: string]: any; //  Allow dynamic keys for additional integration settings
+    };
+    log?: {
+        send: IParserBooking;
+        response: IParserBookingResponse;
+        manual?: { [key: string]: { booking: string; message: string } };
+        sendDate?: Date;
+        integrationStatus?: "wait" | "confirmed" | "denied";
     };
 }
 
@@ -64,12 +72,6 @@ export interface IBooking {
     marketId: number;
     marketName: string;
     messages: IMessage[];
-    log?: {
-        send: IParserBooking;
-        response: IParserBookingResponse;
-        manual?: { [key: string]: { booking: string; message: string } };
-        sendDate?: Date;
-    };
     hotelServices: IBookingHotelService[];
     flightInfo?: IFlight;
     dateInputed?: Date;

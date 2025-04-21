@@ -1,10 +1,10 @@
-import { Request, Response, NextFunction } from "express";
+import { Request } from "express";
 import envVariables from "../config/envVariables";
 
 export async function expressAuthentication(
     request: Request,
     securityName: string,
-): Promise<any> {
+): Promise<unknown> {
     if (["main", "partner"].includes(securityName)) {
         const token = request.headers["authorization"]?.split(" ")[1];
 
