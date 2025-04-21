@@ -54,7 +54,7 @@ export default class ParsingAPI {
             const token = await this.retrieveToken();
 
             if (!token) {
-                throw new Error('Error retrieving token from Parsersin');
+                throw new Error('Error retrieving token from Parsing');
             }
 
             const promiseResult = await fetch(`${envVaraibles.PARSER_URL}/GetAgentHotels`, {
