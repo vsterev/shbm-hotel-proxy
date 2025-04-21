@@ -205,7 +205,7 @@ export default class ParsingAPI {
     };
 
     return {
-      Hotel: hts.integrationSetings?.hotelServer,
+      Hotel: hts.integrationSettings?.hotelServer,
       RoomType: hts.roomIntegrationCode!,
       CheckIn: formatDate(hts.checkIn),
       CheckOut: formatDate(hts.checkOut),
@@ -256,7 +256,7 @@ export default class ParsingAPI {
       bookings.map(async (booking) => {
         await Promise.all(
           booking.hotelServices.map(async (hts) => {
-            if (!hts.integrationSetings?.['serverName' as keyof IBookingHotelService]) {
+            if (!hts.integrationSettings?.['serverName' as keyof IBookingHotelService]) {
               errors.push({
                 booking: booking.bookingName,
                 hotel: hts.hotel,

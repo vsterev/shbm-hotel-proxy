@@ -41,7 +41,7 @@ export interface IBookingHotelService {
     priceRemark?: string;
     roomIntegrationCode?: string;
     boardIntegrationCode?: string;
-    integrationSetings?: {
+    integrationSettings?: {
         apiName?: string;
         hotelCode?: number;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
