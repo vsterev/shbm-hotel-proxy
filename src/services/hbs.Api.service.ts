@@ -1,60 +1,39 @@
-import envVaraibles from "../config/envVariables";
+import envVaraibles from '../config/envVariables';
 
 export default class HbsAPI {
+	static async confirmBooking(data: { bookingNumber: string; confirmationNumber: string; message: string }) {
+		const promiseResult = await fetch(`${envVaraibles.HBS_URL}/api/v1/bookings/confirm`, {
+			method: 'POST',
+			headers: {
+				'Content-type': 'application/json',
+				Authorization: 'Bearer ' + envVaraibles.API_TOKEN_MAIN,
+			},
+			body: JSON.stringify(data),
+		});
 
-  static async confirmBooking(data: {
-    bookingNumber: string;
-    confirmationNumber: string;
-    message: string;
-  }) {
-    try {
+		if (!promiseResult.ok) {
+			return;
+		}
 
-      const promiseResult = await fetch(
-        `${envVaraibles.HBS_URL}/api/v1/bookings/confirm`,
-        {
-          method: "POST",
-          headers: { "Content-type": "application/json", Authorization: 'Bearer ' + envVaraibles.API_TOKEN_MAIN },
-          body: JSON.stringify(data),
-        },
-      );
+		const result = await promiseResult.json();
+		return result;
+	}
 
-      if (!promiseResult.ok) {
-        return;
-      }
+	static async denialBooking(data: { bookingNumber: string; message: string }) {
+		const promiseResult = await fetch(`${envVaraibles.HBS_URL}/api/v1/bookings/deny`, {
+			method: 'POST',
+			headers: {
+				'Content-type': 'application/json',
+				Authorization: 'Bearer ' + envVaraibles.API_TOKEN_MAIN,
+			},
+			body: JSON.stringify(data),
+		});
 
-      const result = await promiseResult.json();
-      return result;
+		if (!promiseResult.ok) {
+			return;
+		}
 
-    } catch (error) {
-      throw error
-    }
-  }
-
-  static async denialBooking(data: {
-    bookingNumber: string;
-    message: string;
-  }) {
-    try {
-
-      const promiseResult = await fetch(
-        `${envVaraibles.HBS_URL}/api/v1/bookings/deny`,
-        {
-          method: "POST",
-          headers: { "Content-type": "application/json", Authorization: 'Bearer ' + envVaraibles.API_TOKEN_MAIN },
-          body: JSON.stringify(data),
-        },
-      );
-
-      if (!promiseResult.ok) {
-        return;
-      }
-
-      const result = await promiseResult.json();
-      return result;
-
-    } catch (error) {
-      throw error
-    }
-  }
-
+		const result = await promiseResult.json();
+		return result;
+	}
 }

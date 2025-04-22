@@ -1,0 +1,22 @@
+name: "Run test, linter and type check"
+on:
+  workflow_dispatch:
+  pull_request:
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: yarn
+
+      - name: Build
+        run: yarn build
+      - name: Run type check
+        run: yarn typescript-check
+      - name: Run linter
+        run: yarn lint
