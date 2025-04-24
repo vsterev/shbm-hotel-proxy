@@ -1,0 +1,21 @@
+name: Deploy to Production
+
+concurrency: production
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    environment:
+      name: production
+      url: http://192.168.10.10/
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run PM2 deploy
+        run: pm2 deploy ecosystem.config.cjs production

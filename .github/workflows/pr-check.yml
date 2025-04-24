@@ -1,4 +1,4 @@
-name: "Run test, linter and type check"
+name: 'Run linter and type check'
 on:
   workflow_dispatch:
   pull_request:
@@ -7,7 +7,8 @@ permissions:
   pull-requests: read
 jobs:
   setup:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
