@@ -111,16 +111,13 @@ export default class ParsingAPI {
 		}
 	}
 
-	static async createReservation(
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		booking: IParserBooking
-	): Promise<IParserBookingResponse | undefined> {
+	static async createReservation(booking: IParserBooking): Promise<IParserBookingResponse | undefined> {
 		try {
 			const token = await this.connect();
 			if (!token) {
 				throw new Error('Error retrieving token from Parsing');
 			}
-			// console.log(JSON.stringify(booking, undefined, 2));
+			console.log(JSON.stringify(booking, undefined, 2));
 			// const promiseResult = await fetch(`${envVaraibles.PARSER_URL}/NewResv`, {
 			//   method: "POST",
 			//   body: JSON.stringify(booking),
@@ -130,6 +127,7 @@ export default class ParsingAPI {
 			//   throw new Error("Error creating reservation in Parsing");
 			// }
 			// return await promiseResult.json();
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const parserResponse = {
 				Adults: 2,
 				Age1: null,
@@ -163,7 +161,8 @@ export default class ParsingAPI {
 				Voucher: '2271456-3598609',
 				isCancelled: '0',
 			};
-			return parserResponse as unknown as IParserBookingResponse;
+			// return parserResponse as unknown as IParserBookingResponse;
+			return undefined;
 		} catch (error) {
 			console.error(error);
 		}
