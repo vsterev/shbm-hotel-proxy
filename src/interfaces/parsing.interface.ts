@@ -17,6 +17,8 @@ export interface IParserBooking {
 	Market: string;
 	Remark?: string;
 	Status: string;
+	Adults: number;
+	Children: number;
 	Comments?: string;
 	Flight_Arr?: string;
 	Flight_Arr_Time?: string;
