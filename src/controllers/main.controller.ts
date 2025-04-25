@@ -4,7 +4,8 @@ import { HotelResponse, IBooking } from '../interfaces/solvex.interface';
 
 const integrations = [
 	{ name: 'parsing', displayName: 'Parsing', code: 'parserCode' },
-	{ name: 'excely', displayName: ' Excely', code: 'excelyCode' },
+	{ name: 'excely', displayName: 'Excely', code: 'excelyCode' },
+	{ name: 'quendoo', displayName: 'Quendoo', code: 'quendooCode' },
 ];
 
 @Tags('main')

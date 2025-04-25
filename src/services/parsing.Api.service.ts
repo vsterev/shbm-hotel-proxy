@@ -111,6 +111,22 @@ export default class ParsingAPI {
 		}
 	}
 
+	private static countOccupancy(tourists: ITourist[]): { adults: number; children: number; infant: number } {
+		return tourists.reduce(
+			(acc, tourist) => {
+				if (tourist.sex === 'MR' || tourist.sex === 'MRS') {
+					acc.adults++;
+				} else if (tourist.sex === 'CHD') {
+					acc.children++;
+				} else if (tourist.sex === 'INF') {
+					acc.infant++;
+				}
+				return acc;
+			},
+			{ adults: 0, children: 0, infant: 0 }
+		);
+	}
+
 	static async createReservation(booking: IParserBooking): Promise<IParserBookingResponse | undefined> {
 		try {
 			const token = await this.connect();
@@ -185,6 +201,7 @@ export default class ParsingAPI {
 				};
 			});
 		};
+
 		const mapAction = {
 			New: 'NEW',
 			Changed: 'UPDATE', // mahnal sym go, zastoto poniakoga nashi nowi popadat v change - izprastam gi kato undefined
@@ -203,6 +220,8 @@ export default class ParsingAPI {
 			Market: booking.marketName,
 			Remark: '',
 			Status: mapAction[booking.action as keyof typeof mapAction],
+			Adults: this.countOccupancy(hts.tourists).adults,
+			Children: this.countOccupancy(hts.tourists).children,
 			Comments: hts.note ? hts.note : '',
 			Names: formatTourists(hts.tourists),
 			Flight_Arr: booking.flightInfo?.flightArr.replace('(', '').replace(')', '').split(' - ')[0] || '',
