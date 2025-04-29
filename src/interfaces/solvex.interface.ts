@@ -1,4 +1,4 @@
-import { IParserBooking, IParserBookingResponse } from './parsing.interface';
+// import { IParserBooking, IParserBookingResponse } from './parsing.interface';
 
 export interface IMessage {
 	id: string;
@@ -12,10 +12,16 @@ export interface IMessage {
 export interface ITourist {
 	name: string;
 	birthDate?: string;
-	sex?: string;
-	hotelServiceId?: number;
+	sex: string;
+	hotelServiceId: number;
 }
 
+export interface ICostOffersInfo {
+	costOfferName: string;
+	costOfferDuration: number;
+	costOfferDateBegin: string;
+	costOfferDateEnd: string;
+}
 export interface IBookingHotelService {
 	serviceId: number;
 	serviceName: string;
@@ -39,17 +45,20 @@ export interface IBookingHotelService {
 	note?: string;
 	tourists: ITourist[];
 	priceRemark?: string;
-	roomIntegrationCode?: string;
-	boardIntegrationCode?: string;
-	integrationSettings?: {
-		apiName?: string;
-		hotelCode?: number;
+	roomIntegrationCode: string;
+	boardIntegrationCode: string;
+	integrationSettings: {
+		apiName: string;
+		hotelCode: number;
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		[key: string]: any; //  Allow dynamic keys for additional integration settings
 	};
+	costOffersInfo: ICostOffersInfo[];
 	log?: {
-		send: IParserBooking;
-		response: IParserBookingResponse;
+		// send: IParserBooking;
+		send: unknown;
+		// response: IParserBookingResponse;
+		response: unknown;
 		manual?: { [key: string]: { booking: string; message: string } };
 		sendDate?: Date;
 		integrationStatus?: 'wait' | 'confirmed' | 'denied';
@@ -108,7 +117,7 @@ export interface IHotelMap {
 export interface HotelResponse {
 	hotelId: number;
 	hotelName: string;
-	settings: {
+	settings?: {
 		hotelServer: string;
 		hotelServerId: number;
 		serverName: string;

@@ -1,10 +1,10 @@
-import { Body, Controller, Get, Path, Post, Query, Res, Route, Security, Tags, TsoaResponse } from 'tsoa';
+import { Body, Controller, Get, Path, Post, Queries, Query, Res, Route, Security, Tags, TsoaResponse } from 'tsoa';
 import ParsingAPI from '../services/parsing.Api.service';
 import { HotelResponse, IBooking } from '../interfaces/solvex.interface';
+import QuendooAPI from '../services/quendooApi.service';
 
 const integrations = [
 	{ name: 'parsing', displayName: 'Parsing', code: 'parserCode' },
-	{ name: 'excely', displayName: 'Excely', code: 'excelyCode' },
 	{ name: 'quendoo', displayName: 'Quendoo', code: 'quendooCode' },
 ];
 
@@ -51,6 +51,8 @@ export class MainController extends Controller {
 		switch (integrationName) {
 			case 'parsing':
 				return (await ParsingAPI.getHotels()) || [];
+			case 'quendoo':
+				return (await QuendooAPI.getHotels()) || [];
 			default:
 				return [];
 		}
@@ -59,28 +61,71 @@ export class MainController extends Controller {
 	@Post('bookings')
 	@Security('main')
 	public async sendBookings(
-		@Query() integrationName: string,
+		@Queries() query: { integrationName: string, flag: "new" | "change" | "cancel" },
 		@Body() bookings: IBooking[],
-		@Res() notFound: TsoaResponse<404, { error: string }>
+		@Res() notFound: TsoaResponse<404, { error: string }>,
+		@Res() integrationError: TsoaResponse<422, { error: string }>
+
 	): Promise<{ errors: { booking: string; hotel: string }[]; processedBookings: IBooking[] }> {
 		try {
-			if (!integrations.some((integration) => integration.name === integrationName)) {
+			if (!integrations.some((integration) => integration.name === query.integrationName)) {
 				notFound(404, {
-					error: `Integration ${integrationName} not found`,
+					error: `Integration ${query.integrationName} not found`,
 				});
 			}
 
-			switch (integrationName) {
+			switch (query.integrationName) {
 				case 'parsing': {
 					const { errors, processedBookings } = await ParsingAPI.sendBookings(bookings);
 					return { errors, processedBookings };
+				}
+				case 'quendoo': {
+					switch (query.flag) {
+						case "new": {
+							const { errors, processedBookings } = await QuendooAPI.sendNewBookings(bookings);
+							return { errors, processedBookings };
+						}
+						case "change": {
+							const errors = [];
+							const processedBookings = [];
+							//check if are booking that have been chenged in IL before sending to Quendoo in this case they should be send to Quendoo with status new
+							const changedBookingNotSendToQuendoo = bookings.filter((booking) => {
+								return booking.hotelServices.some((hts) => hts.log?.response !== undefined);
+							});
+							const {
+								errors: changedBookingNotSendToQuendooErrors,
+								processedBookings: changedBookingNotSendToQuendooProcessedBookings
+							} = await QuendooAPI.sendNewBookings(changedBookingNotSendToQuendoo);
+							errors.push(...changedBookingNotSendToQuendooErrors);
+							processedBookings.push(...changedBookingNotSendToQuendooProcessedBookings);
+
+							// QuendooAPI can not changed bookings - therefore they will not be send
+
+							// should be add logic if reservation are chenged before initial send to Quendoo
+							// const mapAction = {
+							// 	New: 'NEW',
+							// 	Changed: 'UPDATE', // mahnal sym go, zastoto poniakoga nashi nowi popadat v change - izprastam gi kato undefined
+							// 	Cancel: 'CANCEL',
+							// 	InWork: 'CANCEL',
+							// };
+							// const { errors, processedBookings } = await QuendooAPI.sendChangeBookings(bookings, query.flag);
+							return { errors, processedBookings };
+						}
+						case "cancel": {
+							const { errors, processedBookings } = await QuendooAPI.cancelBooking(bookings);
+							return { errors, processedBookings };
+						}
+						default:
+							return { errors: [], processedBookings: [] };
+					}
 				}
 				default:
 					return { errors: [], processedBookings: [] };
 			}
 		} catch (error) {
-			console.error(error);
-			throw new Error('Error sending bookings');
+			return integrationError(422, {
+				error: `Error sending bookings to integration: ${error}`,
+			});
 		}
 	}
 
@@ -101,6 +146,13 @@ export class MainController extends Controller {
 			case 'parsing':
 				return (
 					(await ParsingAPI.getAccommodations(hotelId)) || {
+						rooms: [],
+						boards: [],
+					}
+				);
+			case 'quendoo':
+				return (
+					(await QuendooAPI.getAccommodations(hotelId)) || {
 						rooms: [],
 						boards: [],
 					}

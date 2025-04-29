@@ -1,27 +1,32 @@
 {
-  "entryFile": "src/app.ts",
-  "noImplicitAdditionalProperties": "throw-on-extras",
-  "controllerPathGlobs": ["src/controllers/**/**"],
-  "spec": {
-    "outputDirectory": "build",
-    "specVersion": 3,
-    "securityDefinitions": {
-      "main": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "token"
-      },
-      "partner": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "token"
-      }
-    }
-  },
-  "routes": {
-    "routesDir": "build",
-    "middleware": "express",
-    "authenticationModule": "src/middlewares/auth.middleware.ts"
-  },
-  "ignore": ["**/node_modules/**"]
+	"entryFile": "src/app.ts",
+	"noImplicitAdditionalProperties": "throw-on-extras",
+	"controllerPathGlobs": ["src/controllers/**/**"],
+	"spec": {
+		"outputDirectory": "build",
+		"specVersion": 3,
+		"securityDefinitions": {
+			"main": {
+				"type": "http",
+				"scheme": "bearer",
+				"bearerFormat": "token"
+			},
+			"partner": {
+				"type": "http",
+				"scheme": "bearer",
+				"bearerFormat": "token"
+			},
+			"quendoo_webhook": {
+				"type": "http",
+				"scheme": "bearer",
+				"bearerFormat": "token"
+			}
+		}
+	},
+	"routes": {
+		"routesDir": "build",
+		"middleware": "express",
+		"authenticationModule": "src/middlewares/auth.middleware.ts"
+	},
+	"ignore": ["**/node_modules/**"]
 }

@@ -7,6 +7,7 @@ import {
 	IParsingHotelResponse,
 } from '../interfaces/parsing.interface';
 import { HotelResponse, IBooking, IBookingHotelService, ITourist } from '../interfaces/solvex.interface';
+import SharedFunctions from './shared.functions';
 
 export default class ParsingAPI {
 	static async connect(): Promise<string | undefined> {
@@ -111,21 +112,22 @@ export default class ParsingAPI {
 		}
 	}
 
-	private static countOccupancy(tourists: ITourist[]): { adults: number; children: number; infant: number } {
-		return tourists.reduce(
-			(acc, tourist) => {
-				if (tourist.sex === 'MR' || tourist.sex === 'MRS') {
-					acc.adults++;
-				} else if (tourist.sex === 'CHD') {
-					acc.children++;
-				} else if (tourist.sex === 'INF') {
-					acc.infant++;
-				}
-				return acc;
-			},
-			{ adults: 0, children: 0, infant: 0 }
-		);
-	}
+	static formatDate = (dt: string) => {
+		if (!dt) {
+			return '';
+		}
+		const [y, m, d] = dt.substring(0, 10).split('-');
+		return `${d}.${m}.${y}`;
+	};
+
+	static formatTourists = (tourists: ITourist[]) => {
+		return tourists.map((el) => {
+			return {
+				name: el.name,
+				birthDate: el.birthDate ? this.formatDate(el.birthDate) : '',
+			};
+		});
+	};
 
 	static async createReservation(booking: IParserBooking): Promise<IParserBookingResponse | undefined> {
 		try {
@@ -184,24 +186,7 @@ export default class ParsingAPI {
 		}
 	}
 
-	static bookingSerialization(booking: IBooking, hts: IBookingHotelService): IParserBooking {
-		const formatDate = (dt: string) => {
-			if (!dt) {
-				return '';
-			}
-			const [y, m, d] = dt.substring(0, 10).split('-');
-			return `${d}.${m}.${y}`;
-		};
-
-		const formatTourists = (tourists: ITourist[]) => {
-			return tourists.map((el) => {
-				return {
-					name: el.name,
-					birthDate: el.birthDate ? formatDate(el.birthDate) : '',
-				};
-			});
-		};
-
+	private static bookingSerialization(booking: IBooking, hts: IBookingHotelService): IParserBooking {
 		const mapAction = {
 			New: 'NEW',
 			Changed: 'UPDATE', // mahnal sym go, zastoto poniakoga nashi nowi popadat v change - izprastam gi kato undefined
@@ -211,32 +196,25 @@ export default class ParsingAPI {
 
 		return {
 			Hotel: hts.integrationSettings?.hotelServer,
-			RoomType: hts.roomIntegrationCode!,
-			CheckIn: formatDate(hts.checkIn),
-			CheckOut: formatDate(hts.checkOut),
-			Booked: formatDate(booking.creationDate!),
+			RoomType: hts.roomIntegrationCode,
+			CheckIn: this.formatDate(hts.checkIn),
+			CheckOut: this.formatDate(hts.checkOut),
+			Booked: this.formatDate(booking.creationDate!),
 			Voucher: hts.bookingCode,
-			Board: hts.boardIntegrationCode!,
+			Board: hts.boardIntegrationCode,
 			Market: booking.marketName,
 			Remark: '',
 			Status: mapAction[booking.action as keyof typeof mapAction],
-			Adults: this.countOccupancy(hts.tourists).adults,
-			Children: this.countOccupancy(hts.tourists).children,
+			Adults: SharedFunctions.countOccupancy(hts.tourists).adults,
+			Children: SharedFunctions.countOccupancy(hts.tourists).children,
 			Comments: hts.note ? hts.note : '',
-			Names: formatTourists(hts.tourists),
+			Names: this.formatTourists(hts.tourists),
 			Flight_Arr: booking.flightInfo?.flightArr.replace('(', '').replace(')', '').split(' - ')[0] || '',
 			Flight_Arr_Time: booking.flightInfo?.flightArr.replace('(', '').replace(')', '').split(' - ')[1] || '',
 			Flight_Dep: booking.flightInfo?.flightDep.replace('(', '').replace(')', '').split(' - ')[0] || '',
 			Flight_Dep_Time: booking.flightInfo?.flightDep.replace('(', '').replace(')', '').split(' - ')[1] || '',
 		};
 	}
-	static hotelSerializationResponse = {
-		Hotel: 'hotelName',
-		HotelID: 'hotelId',
-		HotelServer: 'hotelServer',
-		PMS_ServerID: 'hotelServerId',
-		ServerName: 'serverName',
-	};
 
 	static async getAccommodations(hotelId: number) {
 		const parsingRooms = await this.getRooms(hotelId);
@@ -266,7 +244,7 @@ export default class ParsingAPI {
 							return;
 						}
 
-						const serializeParserBookingRequest = ParsingAPI.bookingSerialization(booking, hts);
+						const serializeParserBookingRequest = this.bookingSerialization(booking, hts);
 
 						const parsingBookingResponse = await this.createReservation(serializeParserBookingRequest);
 

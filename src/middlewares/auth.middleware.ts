@@ -2,7 +2,7 @@ import { Request } from 'express';
 import envVariables from '../config/envVariables';
 
 export async function expressAuthentication(request: Request, securityName: string): Promise<unknown> {
-	if (['main', 'partner'].includes(securityName)) {
+	if (['main', 'partner', 'quendoo_webhook'].includes(securityName)) {
 		const token = request.headers['authorization']?.split(' ')[1];
 
 		return new Promise((resolve, reject) => {
