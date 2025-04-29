@@ -1,5 +1,6 @@
 import { Body, Controller, Post, Res, Route, Security, Tags, TsoaResponse } from 'tsoa';
 import HbsAPI from '../services/hbs.Api.service';
+import { IQuendooBookingResponse } from '../interfaces/quendoo.interface';
 
 @Tags('partners')
 @Route('partners')
@@ -51,6 +52,52 @@ export class PartnersController extends Controller {
 			}
 
 			return denial;
+		} catch (error) {
+			console.error((error as Error).message);
+			return serverError(503, { error: 'Error fetching from HBS' });
+		}
+	}
+
+	@Post('booking/quendoo-hook/')
+	@Security('quendoo_webhook')
+	public async quendooHook(
+		@Body() body: unknown,
+		@Res() errorUpdate: TsoaResponse<422, { success: boolean, error: string }>,
+		@Res() serverError: TsoaResponse<503, { error: string }>
+	) {
+		try {
+			const bookingCode = (body as IQuendooBookingResponse).ref_id;
+			const quendooId = (body as IQuendooBookingResponse).id;
+			const status = (body as IQuendooBookingResponse).booking_status;
+			if (!bookingCode || !status) {
+				return errorUpdate(422, { success: false, error: 'Invalid data' });
+			}
+			switch (status) {
+				case 'APPROVED': {
+					const confirmation = await HbsAPI.confirmBooking({
+						bookingNumber: bookingCode,
+						confirmationNumber: quendooId + new Date().toISOString(),
+						message: 'Booking confirmed from Quendoo',
+					});
+					if (!confirmation) {
+						return errorUpdate(422, { success: false, error: 'Booking confirmation failed' });
+					}
+					return { success: true, message: 'Booking confirmed in Solvex' };
+				}
+				case 'CANCELLED': {
+					const denied = await HbsAPI.denialBooking({
+						bookingNumber: bookingCode,
+						message: 'Booking denied from Quendoo',
+					});
+					if (!denied) {
+						return errorUpdate(422, { success: false, error: 'Booking denial failed' });
+					}
+					return { success: true, message: 'Booking cancelled in Solvex' };
+				}
+				default:
+					return errorUpdate(422, { success: false, error: 'Status could not be changed' });
+			}
+
 		} catch (error) {
 			console.error((error as Error).message);
 			return serverError(503, { error: 'Error fetching from HBS' });
