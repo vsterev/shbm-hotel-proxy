@@ -1,7 +1,7 @@
 import envVaraibles from '../config/envVariables';
 
 export default class HbsAPI {
-	static async confirmBooking(data: { bookingNumber: string; confirmationNumber: string; message: string }) {
+	static async confirmBooking(data: { bookingNumber: string; confirmationNumber: string; message: string, partnerBookingId: string; }) {
 		const promiseResult = await fetch(`${envVaraibles.HBS_URL}/api/v1/bookings/confirm`, {
 			method: 'POST',
 			headers: {
@@ -19,7 +19,7 @@ export default class HbsAPI {
 		return result;
 	}
 
-	static async denialBooking(data: { bookingNumber: string; message: string }) {
+	static async denialBooking(data: { bookingNumber: string; message: string, partnerBookingId: string; }) {
 		const promiseResult = await fetch(`${envVaraibles.HBS_URL}/api/v1/bookings/deny`, {
 			method: 'POST',
 			headers: {

@@ -86,18 +86,18 @@ export class MainController extends Controller {
 							return { errors, processedBookings };
 						}
 						case "change": {
-							const errors = [];
-							const processedBookings = [];
+
 							//check if are booking that have been chenged in IL before sending to Quendoo in this case they should be send to Quendoo with status new
+
 							const changedBookingNotSendToQuendoo = bookings.filter((booking) => {
 								return booking.hotelServices.some((hts) => hts.log?.response !== undefined);
 							});
+
 							const {
 								errors: changedBookingNotSendToQuendooErrors,
 								processedBookings: changedBookingNotSendToQuendooProcessedBookings
 							} = await QuendooAPI.sendNewBookings(changedBookingNotSendToQuendoo);
-							errors.push(...changedBookingNotSendToQuendooErrors);
-							processedBookings.push(...changedBookingNotSendToQuendooProcessedBookings);
+
 
 							// QuendooAPI can not changed bookings - therefore they will not be send
 
@@ -109,7 +109,10 @@ export class MainController extends Controller {
 							// 	InWork: 'CANCEL',
 							// };
 							// const { errors, processedBookings } = await QuendooAPI.sendChangeBookings(bookings, query.flag);
-							return { errors, processedBookings };
+							return {
+								errors: changedBookingNotSendToQuendooErrors,
+								processedBookings: changedBookingNotSendToQuendooProcessedBookings
+							};
 						}
 						case "cancel": {
 							const { errors, processedBookings } = await QuendooAPI.cancelBooking(bookings);
@@ -123,8 +126,9 @@ export class MainController extends Controller {
 					return { errors: [], processedBookings: [] };
 			}
 		} catch (error) {
+			console.error(error);
 			return integrationError(422, {
-				error: `Error sending bookings to integration: ${error}`,
+				error: `Error sending bookings to integration - ${error instanceof Error ? error.message : 'Unknown error'}`,
 			});
 		}
 	}

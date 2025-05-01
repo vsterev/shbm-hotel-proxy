@@ -262,15 +262,17 @@ export default class ParsingAPI {
 
 						if (
 							!!parsingBookingResponse?.ConfirmationNo &&
-							parsingBookingResponse?.ConfirmationNo !== '' &&
-							parsingBookingResponse?.ConfirmationNo !== '0' &&
 							booking.action !== 'Cancel'
 						) {
-							//how to check WAIT status
 							hts.confirmationNumber = parsingBookingResponse?.ConfirmationNo;
 							hts.msgConfirmation = msgConfirmation;
 							hts.status = 'Confirmed';
 							hts.log.integrationStatus = 'confirmed';
+
+						} else if (booking.action !== 'Cancel' && parsingBookingResponse?.ConfirmationNo !== '') {
+							//how to check WAIT status
+							hts.status = 'InWork';  //tova da se proveri
+							hts.log.integrationStatus = 'wait';
 						} else {
 							hts.status = 'Cancel';
 							hts.log.integrationStatus = 'denied';
