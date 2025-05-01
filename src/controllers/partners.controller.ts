@@ -13,12 +13,14 @@ export class PartnersController extends Controller {
 			bookingNumber: string;
 			confirmationNumber: string;
 			message: string;
+			partnerBookingId?: string;
 		},
 		@Res() errorUpdate: TsoaResponse<422, { error: string }>,
 		@Res() serverError: TsoaResponse<503, { error: string }>
 	) {
 		try {
-			const confirmation = await HbsAPI.confirmBooking(body);
+			const partnerBookingId = body.partnerBookingId || "";
+			const confirmation = await HbsAPI.confirmBooking({ ...body, partnerBookingId });
 
 			if (!confirmation) {
 				return errorUpdate(422, {
@@ -40,12 +42,14 @@ export class PartnersController extends Controller {
 		body: {
 			bookingNumber: string;
 			message: string;
+			partnerBookingId?: string;
 		},
 		@Res() errorUpdate: TsoaResponse<422, { error: string }>,
 		@Res() serverError: TsoaResponse<503, { error: string }>
 	) {
 		try {
-			const denial = await HbsAPI.denialBooking(body);
+			const partnerBookingId = body.partnerBookingId || "";
+			const denial = await HbsAPI.denialBooking({ ...body, partnerBookingId });
 
 			if (!denial) {
 				return errorUpdate(422, { error: 'Booking denial failed' });
@@ -69,15 +73,27 @@ export class PartnersController extends Controller {
 			const bookingCode = (body as IQuendooBookingResponse).ref_id;
 			const quendooId = (body as IQuendooBookingResponse).id;
 			const status = (body as IQuendooBookingResponse).booking_status;
+
+			if (status && !['APPROVED', "CANCELLED", "REQUESTED", "CREATED"].includes(status)) {
+				return errorUpdate(422, {
+					error: "Status is not possible to update",
+					success: false
+				});
+			}
+
 			if (!bookingCode || !status) {
 				return errorUpdate(422, { success: false, error: 'Invalid data' });
 			}
+
+			//check if booking is for this customer
+
 			switch (status) {
 				case 'APPROVED': {
 					const confirmation = await HbsAPI.confirmBooking({
 						bookingNumber: bookingCode,
 						confirmationNumber: quendooId + new Date().toISOString(),
 						message: 'Booking confirmed from Quendoo',
+						partnerBookingId: String(quendooId),
 					});
 					if (!confirmation) {
 						return errorUpdate(422, { success: false, error: 'Booking confirmation failed' });
@@ -87,13 +103,17 @@ export class PartnersController extends Controller {
 				case 'CANCELLED': {
 					const denied = await HbsAPI.denialBooking({
 						bookingNumber: bookingCode,
-						message: 'Booking denied from Quendoo',
+						message: 'Booking is cancelled from Quendoo',
+						partnerBookingId: String(quendooId),
+
 					});
 					if (!denied) {
 						return errorUpdate(422, { success: false, error: 'Booking denial failed' });
 					}
 					return { success: true, message: 'Booking cancelled in Solvex' };
 				}
+				case 'REQUESTED':
+				case 'CREATED':
 				default:
 					return errorUpdate(422, { success: false, error: 'Status could not be changed' });
 			}

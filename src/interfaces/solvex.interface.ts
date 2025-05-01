@@ -61,7 +61,8 @@ export interface IBookingHotelService {
 		response: unknown;
 		manual?: { [key: string]: { booking: string; message: string } };
 		sendDate?: Date;
-		integrationStatus?: 'wait' | 'confirmed' | 'denied';
+		integrationStatus?: 'wait' | 'confirmed' | 'denied' | 'cancelled';
+		integrationId?: string;
 	};
 }
 

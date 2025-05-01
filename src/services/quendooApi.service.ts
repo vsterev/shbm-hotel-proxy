@@ -108,6 +108,7 @@ export default class QuendooAPI {
         };
 
         return {
+            //should add new logic attach quendoo status dependent from hts.status
             property: hts.integrationSettings?.hotelCode,
             ref_id: hts.bookingCode,
             booking_timestamp: new Date().getTime(),
@@ -157,25 +158,27 @@ export default class QuendooAPI {
                                 method: 'POST', data: serializeParserBookingRequest
                             });
 
-                        console.log('quendooNewBookingResponse', quendooBookingResponse);
-
-                        console.log('quendooNewBookingResponse', quendooBookingResponse.booking_status);
-
                         hts.log = {
                             send: serializeParserBookingRequest,
                             response: quendooBookingResponse || ({} as IQuendooBookingResponse),
+                            integrationId: String(quendooBookingResponse.id),
                             sendDate: new Date(),
                         };
 
                         switch (quendooBookingResponse.booking_status) {
+                            // change logic in friday according Goryan call
                             case 'REQUESTED':
                             case 'CREATED': {
-                                hts.status = 'Wait';
+                                // hts.status = 'Wait';
+                                hts.msgConfirmation = "Booking is waiting approval from Quendoo";
                                 hts.log.integrationStatus = 'wait';
                                 break;
                             }
                             case 'APPROVED': {
                                 if (booking.action !== 'Cancel') {
+                                    // ask where get conformationNumber
+                                    hts.confirmationNumber = String(quendooBookingResponse.id);
+                                    hts.msgConfirmation = String(quendooBookingResponse.id) + "/" + new Date().toLocaleString();
                                     hts.status = 'Confirmed';
                                     hts.log.integrationStatus = 'confirmed';
                                     break;
@@ -188,6 +191,7 @@ export default class QuendooAPI {
                             case 'CANCELLED': {
                                 hts.status = 'Cancel';
                                 hts.log.integrationStatus = 'denied';
+                                hts.msgConfirmation = "Booking is cancelled from Quendoo";
                                 break;
                             }
 
@@ -219,7 +223,6 @@ export default class QuendooAPI {
                             });
                             return;
                         }
-
                         const quendooBookingResponse: IQuendooBookingResponse = await this.quendooClient(
                             {
                                 path: `booking/cancel?id=${(hts.log?.response as IQuendooBookingResponse).id}&ref_id=${hts.bookingCode}`,
@@ -234,10 +237,12 @@ export default class QuendooAPI {
                             send: `booking/cancel?id=${(hts.log?.response as IQuendooBookingResponse).id}&ref_id=${hts.bookingCode}`,
                             response: quendooBookingResponse || ({} as IQuendooBookingResponse),
                             sendDate: new Date(),
+                            integrationId: String(quendooBookingResponse.id),
                         };
 
                         hts.status = 'Cancel';
-                        hts.log.integrationStatus = 'denied';
+                        hts.log.integrationStatus = 'cancelled';
+                        hts.log.integrationId = String((hts.log?.response as IQuendooBookingResponse).id);
                         return hts;
                     })
                 );
