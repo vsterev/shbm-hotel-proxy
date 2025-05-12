@@ -16,8 +16,8 @@ export default class SharedFunctions {
             { adults: 0, children: 0, infant: 0 }
         );
     }
-    static getFullYearDiff(date: string) {
-        const d1 = new Date();
+    static getTouristAge(date: string, dateCheckin: string) {
+        const d1 = new Date(dateCheckin);
         const d2 = new Date(date);
         const [earlier, later] = d1 < d2 ? [d1, d2] : [d2, d1];
 
@@ -32,5 +32,17 @@ export default class SharedFunctions {
         }
 
         return years;
+    }
+    static childAges(tourists: ITourist[], dateCheckIn: string): number[] {
+        const childArray: number[] = [];
+
+        tourists.map(tourist => {
+            if (["CHD", "INF"].includes(tourist.sex)) {
+                const childAge = SharedFunctions.getTouristAge(tourist.birthDate!, dateCheckIn);
+                childArray.push(childAge);
+            }
+        });
+
+        return childArray;
     }
 }

@@ -68,35 +68,22 @@ export default class QuendooAPI {
         return `${y}-${m}-${d}`;
     };
 
-    private static formatTourists(tourists: ITourist[]): IQuendooTourist[] {
+    private static formatTourists(tourists: ITourist[], dateCheckIn: string): IQuendooTourist[] {
         return tourists.map(tourist => {
             return {
                 first_name: tourist.name.split(' ')[1],
                 last_name: tourist.name.split(' ')[0],
                 adult: ["MR", "MRS"].includes(tourist.sex),
-                non_adult_age: ["CHD", "INF"].includes(tourist.sex) ? SharedFunctions.getFullYearDiff(tourist.birthDate!) : undefined
+                non_adult_age: ["CHD", "INF"].includes(tourist.sex) ? SharedFunctions.getTouristAge(tourist.birthDate!, dateCheckIn) : undefined
             };
         });
-    }
-
-    private static childAgeArray(tourists: ITourist[]): number[] {
-        const childArray: number[] = [];
-
-        tourists.map(tourist => {
-            if (["CHD", "INF"].includes(tourist.sex)) {
-                const childAge = SharedFunctions.getFullYearDiff(tourist.birthDate!);
-                childArray.push(childAge);
-            }
-        });
-
-        return childArray;
     }
 
     private static newBookingPrepare(booking: IBooking, hts: IBookingHotelService): IQuendooBooking {
 
         const firstTourist = {
-            first_name: this.formatTourists(hts.tourists)[0].first_name,
-            last_name: this.formatTourists(hts.tourists)[0].last_name,
+            first_name: this.formatTourists(hts.tourists, hts.checkIn)[0].first_name,
+            last_name: this.formatTourists(hts.tourists, hts.checkIn)[0].last_name,
             email: "office@solvex.bg",
             phone: "+35929358000"
         };
@@ -109,7 +96,7 @@ export default class QuendooAPI {
 
         return {
             //should add new logic attach quendoo status dependent from hts.status
-            property: hts.integrationSettings?.hotelCode,
+            property: hts.integrationSettings?.hotelId,
             ref_id: hts.bookingCode,
             booking_timestamp: new Date().getTime(),
             checkin_date: this.formatDate(hts.checkIn),
@@ -121,9 +108,9 @@ export default class QuendooAPI {
                 rate: + hts.boardIntegrationCode.split('->')[0],
                 occupancy: {
                     adults: SharedFunctions.countOccupancy(hts.tourists).adults,
-                    children: this.childAgeArray(hts.tourists),
+                    children: SharedFunctions.childAges(hts.tourists, hts.checkIn),
                 },
-                guests: this.formatTourists(hts.tourists),
+                guests: this.formatTourists(hts.tourists, hts.checkIn),
                 // wait Megatec to return hotelService price in hotelService
                 price: 1000,
                 currency: "BGN"
@@ -142,11 +129,13 @@ export default class QuendooAPI {
             bookings.map(async (booking) => {
                 await Promise.all(
                     booking.hotelServices.map(async (hts) => {
-                        if (!hts.integrationSettings?.['hotelCode' as keyof IBookingHotelService]) {
+                        if (!hts.integrationSettings?.['hotelId' as keyof IBookingHotelService]) {
                             errors.push({
                                 booking: booking.bookingName,
                                 hotel: hts.hotel,
                             });
+                            return;
+                        } else if (hts.status === 'Update') {
                             return;
                         }
 
@@ -176,7 +165,7 @@ export default class QuendooAPI {
                             }
                             case 'APPROVED': {
                                 if (booking.action !== 'Cancel') {
-                                    // ask where get conformationNumber
+                                    // ask where get conformationNumber from pms
                                     hts.confirmationNumber = String(quendooBookingResponse.id);
                                     hts.msgConfirmation = String(quendooBookingResponse.id) + "/" + new Date().toLocaleString();
                                     hts.status = 'Confirmed';
@@ -216,7 +205,7 @@ export default class QuendooAPI {
                 await Promise.all(
                     booking.hotelServices.map(async (hts) => {
 
-                        if (!hts.integrationSettings?.['hotelCode' as keyof IBookingHotelService]) {
+                        if (!hts.integrationSettings?.['hotelId' as keyof IBookingHotelService]) {
                             errors.push({
                                 booking: booking.bookingName,
                                 hotel: hts.hotel,
