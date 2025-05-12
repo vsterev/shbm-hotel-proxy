@@ -31,9 +31,9 @@ export default class QuendooAPI {
         return await response.json();
     }
 
-    static async getHotels(): Promise<HotelResponse[] | undefined> {
+    static async getHotels(hotelId?: number): Promise<HotelResponse[] | undefined> {
         try {
-            const properties = await this.quendooClient({ path: 'properties?locale=en', method: 'GET' });
+            const properties = await this.quendooClient({ path: `properties?locale=en${hotelId ? `&properties=${hotelId}` : ''}`, method: 'GET' });
 
             return properties.map((property: IQuendooPropertyResponse) => {
                 return { hotelId: property.property.id, hotelName: property.property.name };
@@ -46,11 +46,11 @@ export default class QuendooAPI {
 
     static async getAccommodations(hotelId: number) {
 
-        const properties = await this.quendooClient({ path: 'properties?locale=en', method: 'GET' });
+        const properties = await this.quendooClient({ path: `properties?locale=en&properties=${hotelId}`, method: 'GET' });
 
-        const rooms = properties.find((property: IQuendooPropertyResponse) => property.property.id === hotelId)?.rooms.map((room: { room: { id: number; name: string } }) => room.room.id + "->" + room.room.name) || [];
+        const rooms = properties[0].rooms.map((room: { room: { id: number; name: string } }) => room.room.id + "->" + room.room.name) || [];
 
-        const rates = properties.find((property: IQuendooPropertyResponse) => property.property.id === hotelId)?.rooms.map((room: { rates: { id: number; meal_plan_code: string }[] }) => room.rates) || [];
+        const rates = properties[0].rooms.map((room: { rates: { id: number; meal_plan_code: string }[] }) => room.rates) || [];
 
         const boards = rates.flat().reduce((acc: string[], rate: { id: number; meal_plan_code: string }) => {
             const str = `${rate.id}->${rate.meal_plan_code}`;
