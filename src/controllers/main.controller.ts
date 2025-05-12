@@ -2,9 +2,11 @@ import { Body, Controller, Get, Path, Post, Queries, Query, Res, Route, Security
 import ParsingAPI from '../services/parsing.Api.service';
 import { HotelResponse, IBooking } from '../interfaces/solvex.interface';
 import QuendooAPI from '../services/quendooApi.service';
+import ParsingNewAPI from '../services/parsingNew.Api.service';
 
 const integrations = [
-	{ name: 'parsing', displayName: 'Parsing', code: 'parserCode' },
+	{ name: 'parsing', displayName: 'Parsing-current', code: 'parserCode' },
+	{ name: 'parsingNew', displayName: 'Parsing-new', code: 'parserCodeNew' },
 	{ name: 'quendoo', displayName: 'Quendoo', code: 'quendooCode' },
 ];
 
@@ -51,6 +53,8 @@ export class MainController extends Controller {
 		switch (integrationName) {
 			case 'parsing':
 				return (await ParsingAPI.getHotels()) || [];
+			case 'parsingNew':
+				return (await ParsingNewAPI.getHotels()) || [];
 			case 'quendoo':
 				return (await QuendooAPI.getHotels()) || [];
 			default:
@@ -122,6 +126,10 @@ export class MainController extends Controller {
 							return { errors: [], processedBookings: [] };
 					}
 				}
+				case 'parsingNew': {
+					const { errors, processedBookings } = await ParsingNewAPI.sendBookingsMessages(bookings);
+					return { errors, processedBookings };
+				}
 				default:
 					return { errors: [], processedBookings: [] };
 			}
@@ -150,6 +158,13 @@ export class MainController extends Controller {
 			case 'parsing':
 				return (
 					(await ParsingAPI.getAccommodations(hotelId)) || {
+						rooms: [],
+						boards: [],
+					}
+				);
+			case 'parsingNew':
+				return (
+					(await ParsingNewAPI.getAccommodations(hotelId)) || {
 						rooms: [],
 						boards: [],
 					}

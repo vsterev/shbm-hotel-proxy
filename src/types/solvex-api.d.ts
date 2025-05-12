@@ -301,7 +301,7 @@ export interface components {
             /** Format: double */
             resortId: number;
             integrationSettings?: {
-                hotelCode: string;
+                hotelId: string;
                 apiName: string;
             } & {
                 [key: string]: unknown;

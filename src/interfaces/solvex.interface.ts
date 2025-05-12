@@ -49,7 +49,7 @@ export interface IBookingHotelService {
 	boardIntegrationCode: string;
 	integrationSettings: {
 		apiName: string;
-		hotelCode: number;
+		hotelId: number;
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		[key: string]: any; //  Allow dynamic keys for additional integration settings
 	};
@@ -119,8 +119,10 @@ export interface HotelResponse {
 	hotelId: number;
 	hotelName: string;
 	settings?: {
-		hotelServer: string;
-		hotelServerId: number;
-		serverName: string;
+		// hotelServer?: string;
+		// hotelServerId?: number;
+		// serverName: string;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		[key: string]: any;
 	};
 }
