@@ -250,62 +250,66 @@ export default class ParsingNewAPI {
         return await response.json();
     }
 
-    static async createMessage(topicId: number, name: string, booking: IParsingNewBookingRequest): Promise<IParsingNewMessageResponse> {
+    static async createMessage(topicId: number, name: string, booking: IParsingNewBookingRequest): Promise<IParsingNewMessageResponse | undefined> {
         const token = await this.retrieveToken();
 
         const bodyData = {
-            topic: `${envVaraibles.PARSERNEW_URL}/Topic/${topicId}/`,
+            topic: topicId,
             name,
-            message: JSON.stringify(booking),
+            text: JSON.stringify(booking),
         };
+        try {
+            const response = await fetch(`${envVaraibles.PARSERNEW_URL}/Message/`, {
+                method: 'POST',
+                headers: {
+                    'Content-type': 'application/json',
+                    Authorization: `Token ${token}`,
+                },
+                body: JSON.stringify(bodyData),
+            });
+            if (!response.ok) {
+                throw new Error(`Failed to create message: ${response?.statusText}`);
+            }
 
-        const response = await fetch(`${envVaraibles.PARSERNEW_URL}/Message/`, {
-            method: 'POST',
-            headers: {
-                'Content-type': 'application/json',
-                Authorization: `Token ${token}`,
-            },
-            body: JSON.stringify(bodyData),
-        });
+            return await response.json();
+        } catch (error) {
+            console.error('Error checking Redis:', error);
 
-        if (!response.ok) {
-            throw new Error(`Failed to create message: ${response.statusText}`);
         }
-
-        return await response.json();
     }
     static async sendBookingsMessages(bookings: IBooking[]): Promise<{
         errors: { booking: string; hotel: string }[];
         processedBookings: IBooking[];
     }> {
         try {
+
             const errors = [] as { booking: string; hotel: string }[];
             const processedBookings = await Promise.all(bookings.map(async (booking) => {
                 const hotelIntegrationId = booking.hotelServices[0].integrationSettings?.hotelId;
                 const hotelIntegrationCorp = booking.hotelServices[0].integrationSettings?.corp;
                 const topic = await this.createTopic(`Booking ${booking.bookingName}`, hotelIntegrationId, hotelIntegrationCorp);
 
-                booking.hotelServices.map(async (hts) => {
+                await Promise.all(booking.hotelServices.map(async (hts) => {
                     const bookingRequest = this.bookingSerialization(booking, hts);
                     const message = await this.createMessage(topic.id, hts.bookingCode, bookingRequest);
 
-
-                    if (!message) {
+                    if (!message?.text) {
                         errors.push({ booking: booking.bookingName, hotel: hts.hotel });
                         return { errors, processedBookings: [] };
                     }
                     hts.log = {
                         send: bookingRequest,
-                        response: bookingRequest || ({} as IParsingNewMessageResponse),
+                        response: message || ({} as IParsingNewMessageResponse),
                         sendDate: new Date(),
                         //all bookings status will be changed later from parsing using custom endpoint 
-                        integrationStatus: 'wait',
+                        integrationStatus: booking.action == "Cancel" ? 'cancelled' : 'wait',
                         integrationId: String(message.id),
                     };
 
                     return hts;
 
-                });
+                })
+                );
                 return booking;
             })
             );

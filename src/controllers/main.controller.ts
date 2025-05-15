@@ -77,7 +77,6 @@ export class MainController extends Controller {
 					error: `Integration ${query.integrationName} not found`,
 				});
 			}
-
 			switch (query.integrationName) {
 				case 'parsing': {
 					const { errors, processedBookings } = await ParsingAPI.sendBookings(bookings);
