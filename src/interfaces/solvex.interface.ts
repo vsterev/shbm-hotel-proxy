@@ -75,7 +75,7 @@ export interface IBooking {
 	_id?: string;
 	bookingName: string;
 	bookingId: number;
-	action: string;
+	action: "New" | "Change" | "Cancel";
 	creationDate?: string;
 	cancelDate?: string;
 	changeDate?: string;

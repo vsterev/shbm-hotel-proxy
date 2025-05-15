@@ -15,23 +15,21 @@ export class PartnersController extends Controller {
 			message: string;
 			partnerBookingId?: string;
 		},
-		@Res() errorUpdate: TsoaResponse<422, { error: string }>,
-		@Res() serverError: TsoaResponse<503, { error: string }>
-	) {
+		@Res() errorConfirm: TsoaResponse<422, { status: "failure" | "success", message: string }>,
+	): Promise<{ status: "failure" | "success", message: string }> {
 		try {
 			const partnerBookingId = body.partnerBookingId || "";
 			const confirmation = await HbsAPI.confirmBooking({ ...body, partnerBookingId });
 
 			if (!confirmation) {
-				return errorUpdate(422, {
-					error: 'Booking confirmation failed',
-				});
+				// return errorConfirm(422, { status: "failure", message: 'Booking confirmation failed' });
+				throw Error('Booking confirmation failed');
 			}
 
 			return confirmation;
 		} catch (error) {
 			console.error((error as Error).message);
-			return serverError(503, { error: 'Error fetching from HBS' });
+			return errorConfirm(422, { status: "failure", message: (error as Error).message });
 		}
 	}
 
@@ -44,21 +42,20 @@ export class PartnersController extends Controller {
 			message: string;
 			partnerBookingId?: string;
 		},
-		@Res() errorUpdate: TsoaResponse<422, { error: string }>,
-		@Res() serverError: TsoaResponse<503, { error: string }>
-	) {
+		@Res() errorUpdate: TsoaResponse<422, { status: "failure" | "success", message: string }>,
+	): Promise<{ status: "failure" | "success", message: string }> {
 		try {
 			const partnerBookingId = body.partnerBookingId || "";
 			const denial = await HbsAPI.denialBooking({ ...body, partnerBookingId });
 
 			if (!denial) {
-				return errorUpdate(422, { error: 'Booking denial failed' });
+				throw Error('Booking denial failed');
 			}
 
-			return denial;
+			return { status: "success", message: 'Booking was denied' };
 		} catch (error) {
 			console.error((error as Error).message);
-			return serverError(503, { error: 'Error fetching from HBS' });
+			return errorUpdate(422, { status: "failure", message: (error as Error).message });
 		}
 	}
 

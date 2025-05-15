@@ -135,52 +135,54 @@ export default class ParsingAPI {
 			if (!token) {
 				throw new Error('Error retrieving token from Parsing');
 			}
-			console.log(JSON.stringify(booking, undefined, 2));
-			// const promiseResult = await fetch(`${envVaraibles.PARSER_URL}/NewResv`, {
-			//   method: "POST",
-			//   body: JSON.stringify(booking),
-			//   headers: { "Content-type": "application/json", Authorization: token },
-			// });
-			// if (!promiseResult.ok) {
-			//   throw new Error("Error creating reservation in Parsing");
-			// }
-			// return await promiseResult.json();
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const parserResponse = {
-				Adults: 2,
-				Age1: null,
-				Age2: null,
-				Age3: null,
-				Age4: null,
-				Age5: null,
-				Age6: null,
-				Age7: null,
-				Board: 'ALL-',
-				// "CheckIn": "01.09.2022",
-				// "CheckOut": "10.09.2022",
-				CheckIn: '07.06.2025',
-				CheckOut: '14.06.2025',
-				Children: 0,
-				ConfirmationNo: '2567512-vasko',
-				Hotel: 'Bolero',
-				Name1: 'LUKACOVA SIMONA',
-				Name2: 'LUKACOVA SIMONA      | SOBEK DAVID     ',
-				Name3: null,
-				Name4: null,
-				Name5: null,
-				Name6: null,
-				Name7: null,
-				PriceAmount: '1566',
-				PriceCurrency: 'EUR',
-				ResponseText: 'NEW:|24.06.22 16:59||5,5,5,5,5,5,5,5,5|5,5,5,5,5,5,5,5,5|cf=1|rq=0',
-				ResvID: 0,
-				RoomType: 'DBLDX',
-				// "Vocher": "2114698_2804931",
-				Voucher: '2271456-3598609',
-				isCancelled: '0',
-			};
-			// return parserResponse as unknown as IParserBookingResponse;
-			return undefined;
+
+			const promiseResult = await fetch(`${envVaraibles.PARSER_URL}/NewResv`, {
+				method: "POST",
+				body: JSON.stringify(booking),
+				headers: { "Content-type": "application/json", Authorization: token },
+			});
+
+			if (!promiseResult.ok) {
+				throw new Error("Error creating reservation in Parsing");
+			}
+
+			const parserResponse = await promiseResult.json();
+
+			// const parserResponse = {
+			// 	Adults: 2,
+			// 	Age1: null,
+			// 	Age2: null,
+			// 	Age3: null,
+			// 	Age4: null,
+			// 	Age5: null,
+			// 	Age6: null,
+			// 	Age7: null,
+			// 	Board: 'ALL-',
+			// 	// "CheckIn": "01.09.2022",
+			// 	// "CheckOut": "10.09.2022",
+			// 	CheckIn: '07.06.2025',
+			// 	CheckOut: '14.06.2025',
+			// 	Children: 0,
+			// 	ConfirmationNo: '',
+			// 	Hotel: 'Bolero',
+			// 	Name1: 'LUKACOVA SIMONA',
+			// 	Name2: 'LUKACOVA SIMONA      | SOBEK DAVID     ',
+			// 	Name3: null,
+			// 	Name4: null,
+			// 	Name5: null,
+			// 	Name6: null,
+			// 	Name7: null,
+			// 	PriceAmount: '1566',
+			// 	PriceCurrency: 'EUR',
+			// 	ResponseText: 'NEW:|24.06.22 16:59||5,5,5,5,5,5,5,5,5|5,5,5,5,5,5,5,5,5|cf=1|rq=0',
+			// 	ResvID: 0,
+			// 	RoomType: 'DBLDX',
+			// 	// "Vocher": "2114698_2804931",
+			// 	Voucher: '2271456-3598609',
+			// 	isCancelled: '0',
+			// };
+			return parserResponse as unknown as IParserBookingResponse;
+			// return undefined;
 		} catch (error) {
 			console.error(error);
 		}
@@ -202,7 +204,7 @@ export default class ParsingAPI {
 			Booked: this.formatDate(booking.creationDate!),
 			Voucher: hts.bookingCode,
 			Board: hts.boardIntegrationCode,
-			Market: booking.marketName,
+			Market: booking.marketName + " market",
 			Remark: '',
 			Status: mapAction[booking.action as keyof typeof mapAction],
 			Adults: SharedFunctions.countOccupancy(hts.tourists).adults,
@@ -259,23 +261,33 @@ export default class ParsingAPI {
 							response: parsingBookingResponse || ({} as IParserBookingResponse),
 							sendDate: new Date(),
 						};
-
+						console.log('hts.log', JSON.stringify(hts.log, null, 2));
 						if (
-							!!parsingBookingResponse?.ConfirmationNo &&
-							booking.action !== 'Cancel'
+							(!!parsingBookingResponse?.ConfirmationNo && parsingBookingResponse.ConfirmationNo !== "0") &&
+							booking.action !== 'Cancel' && (parserMessage?.toLowerCase().includes('new') || parserMessage?.toLowerCase().includes('updated'))
 						) {
 							hts.confirmationNumber = parsingBookingResponse?.ConfirmationNo;
 							hts.msgConfirmation = msgConfirmation;
-							hts.status = 'Confirmed';
+							// hts.status = 'Confirmed';
 							hts.log.integrationStatus = 'confirmed';
+							console.log('case1');
+						} else if (booking.action === 'Cancel' && parserMessage?.toLowerCase().includes('cancelled')) {
+							hts.log.integrationStatus = 'cancelled';
+							console.log('case4');
 
-						} else if (booking.action !== 'Cancel' && parsingBookingResponse?.ConfirmationNo !== '') {
-							//how to check WAIT status
-							hts.status = 'InWork';  //tova da se proveri
-							hts.log.integrationStatus = 'wait';
-						} else {
-							hts.status = 'Cancel';
+						} else if (parserMessage?.toLowerCase().includes('no reservation created')
+							|| parserMessage?.toLowerCase().includes('error')
+							|| parserMessage?.toLowerCase().includes('empty detail')
+						) {
 							hts.log.integrationStatus = 'denied';
+							console.log('case2');
+
+						} else if (booking.action !== 'Cancel' && (!parsingBookingResponse?.ConfirmationNo || parsingBookingResponse?.ConfirmationNo === '0')) {
+							//how to check WAIT status
+							// hts.status = 'InWork';  //tova da se proveri
+							hts.log.integrationStatus = 'wait';
+							console.log('case3');
+
 						}
 						return hts;
 					})
